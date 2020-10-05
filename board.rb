@@ -57,13 +57,223 @@ class Board
     @rawBoard[4][5] = BLACK
     @rawBoard[5][4] = BLACK
 
-    # self.initMovable
+    self.initMovable
+  end
+  # set a value of @movableDir
+  def initMovable
+    for x in 1..BOARDSIZE do
+      for y in 1..BOARDSIZE do
+        dir = self.checkMobility(x, y, @current_color)
+        @movableDir[x][y] = dir
+      end
+    end
+  end
+
+  # check the direction that you can put a stone
+  def checkMobility(x1, y1, color)
+    # you cannnot if already exist
+    if @rawBoard[x1][y1] != EMPTY
+      return NONE
+    end
+
+    # initialize the direction "dir"
+    dir = NONE
+
+    # UP
+    x = x1
+    y = y1
+    # if below is opposite color
+    if @rawBoard[x][y-1] == -color
+      # set y - 1 to y
+      y = y - 1
+      # go up til [x][y] => opposite color
+      while (@rawBoard[x][y] == -color)
+        y = y - 1
+      end
+
+      if @rawBoard[x][y] == color
+        dir |= UPPER
+      end
+    end
+
+    # DOWN
+    x = x1
+    y = y1
+    if @rawBoard[x][y+1] == -color
+      y = y + 1
+      while (@rawBoard[x][y] == -color)
+        y = y + 1
+      end
+      if @rawBoard[x][y] = color
+        dir |= LOWER
+      end
+    end
+
+    # LEFT
+    x = x1
+    y = y1
+
+    if @rawBoard[x-1][y] == -color
+      x = x - 1
+      while (@rawBoard[x][y] == -color)
+        x = x - 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= LEFT
+      end
+    end
+
+    # RIGHT
+    if @rawBoard[x+1][y] == -color
+      x = x + 1
+      while (@rawBoard[x][y] == -color)
+        x = x + 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= RIGHT
+      end
+    end
+
+    # UPPER_LEFT
+    if @rawBoard[x-1][y-1] == -color
+      x = x - 1
+      y = y - 1
+      while (@rawBoard[x][y] == -color)
+        x = x - 1
+        y = y - 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= UPPER_LEFT
+      end
+    end
+
+    # UPPER_RIGHT
+    if @rawBoard[x+1][y-1] == -color
+      x = x + 1
+      y = y - 1
+      while (@rawBoard[x][y] == -color)
+        x = x + 1
+        y = y - 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= UPPER_RIGHT
+      end
+    end
+
+    # LOWER_LEFT
+    if @rawBoard[x-1][y+1] == -color
+      x = x - 1
+      y = y + 1
+      while (@rawBoard[x][y] == -color)
+        x = x - 1
+        y = y + 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= LOWER_LEFT
+      end
+    end
+
+    # LOWER_RIGHT
+    if @rawBoard[x+1][y+1] == -color
+      x = x + 1
+      y = y + 1
+      while (@rawBoard[x][y] == -color)
+        x = x + 1
+        y = y + 1
+      end
+      if @rawBoard[x][y] == color
+        dir |= LOWER_RIGHT
+      end
+    end
+
+    return dir
+  end
+
+  # upside-down the stone
+  def move(x, y)
+    if @movableDir[x][y] == NONE
+      return false
+    end
+
+    # self.flipDisks(x, y)
+    @rawBoard[x][y] = @current_color
+
+    @turns += 1
+    @current_color = -1 * @current_color
+    self.initMovable
+
+    return true
+  end
+
+  # GUI
+  def loop()
+    while true do
+      print("  a b c d e f g h\n")
+
+      for y in 1..BOARDSIZE do
+        for x in 1..BOARDSIZE do
+          if x == 1
+            s = "1".ord + y - 1
+            print(s.chr("utf-8"))
+          end
+          if @rawBoard[x][y] == EMPTY
+            print(" ")
+          elsif @rawBoard[x][y] == BLACK
+            print("●")
+          elsif @rawBoard[x][y] == WHITE
+            print("○")
+          end
+        end
+      end
+      print("\n")
+    end
+    print("\n")
+
+    print("next is")
+    if current_color == BLACK
+      print("BLACK")
+    elsif
+      print("WHITE")
+    end
+    print(".")
+
+    # validate the input position
+    isvalid = false
+
+    while !isvalid do
+      print("石を置く座標を入力してください(例: a1 ) ->")
+      input = gets.chomp
+
+      if input.length == 2
+        x = input[0].ord - "a".ord + 1
+        y = input[1].ord - "1".ord + 1
+
+        # もし入力された座標が石を打てる場所であれば, isvalid を true にする
+        if x.between?(1,BOARDSIZE) and y.between?(1, BOARDSIZE) and @movableDir[x][y] != NONE
+          isvalid = true
+        end
+      end
+
+      if !isvalid
+        print("そこには打てまへんで.知らんけど. \n")
+      end
+    end
+
+    # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
+    # ひっくり返すのは次回
+    move(x, y)
   end
 end
+
+
+
+
+
 
 # Boardインスタンスの作成
 board = Board.new
 
 # 盤を初期化
 board.init
-        
+
+board.loop
