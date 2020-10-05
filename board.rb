@@ -208,7 +208,7 @@ class Board
   # GUI
   def loop()
     while true do
-      print("  a b c d e f g h\n")
+      print(" abcdefgh\n")
 
       for y in 1..BOARDSIZE do
         for x in 1..BOARDSIZE do
@@ -219,49 +219,51 @@ class Board
           if @rawBoard[x][y] == EMPTY
             print(" ")
           elsif @rawBoard[x][y] == BLACK
-            print("●")
-          elsif @rawBoard[x][y] == WHITE
             print("○")
+          elsif @rawBoard[x][y] == WHITE
+            print("●")
           end
         end
+        print("\n")
       end
       print("\n")
-    end
-    print("\n")
 
-    print("next is")
-    if current_color == BLACK
-      print("BLACK")
-    elsif
-      print("WHITE")
-    end
-    print(".")
+      print("next is")
+      if @current_color == BLACK
+        print("BLACK")
+      elsif
+        print("WHITE")
+      end
+      print(".")
 
-    # validate the input position
-    isvalid = false
+      # validate the input position
+      isvalid = false
 
-    while !isvalid do
-      print("石を置く座標を入力してください(例: a1 ) ->")
-      input = gets.chomp
+      while !isvalid do
+        print("石を置く座標を入力してください(例: a1 ) ->")
+        input = gets.chomp
 
-      if input.length == 2
-        x = input[0].ord - "a".ord + 1
-        y = input[1].ord - "1".ord + 1
+        if input.length == 2
+          x = input[0].ord - "a".ord + 1
+          y = input[1].ord - "1".ord + 1
 
-        # もし入力された座標が石を打てる場所であれば, isvalid を true にする
-        if x.between?(1,BOARDSIZE) and y.between?(1, BOARDSIZE) and @movableDir[x][y] != NONE
-          isvalid = true
+          # もし入力された座標が石を打てる場所であれば, isvalid を true にする
+          p @movableDir
+          if x.between?(1,BOARDSIZE) and y.between?(1, BOARDSIZE) and @movableDir[x][y] != NONE
+            isvalid = true
+          end
+        end
+
+        if !isvalid
+          print("そこには打てまへんで.知らんけど. \n")
         end
       end
+  
 
-      if !isvalid
-        print("そこには打てまへんで.知らんけど. \n")
-      end
+      # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
+      # ひっくり返すのは次回
+      move(x, y)
     end
-
-    # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
-    # ひっくり返すのは次回
-    move(x, y)
   end
 end
 
