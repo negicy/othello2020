@@ -65,6 +65,10 @@ class Board
       for y in 1..BOARDSIZE do
         dir = self.checkMobility(x, y, @current_color)
         @movableDir[x][y] = dir
+        @movableDir.each do |i|
+          # print("#{i}\n")
+        end
+        # print("\n")
       end
     end
   end
@@ -189,22 +193,137 @@ class Board
     return dir
   end
 
+  # ひっくり返すメソッド
+  def flipDisks(x1, y1)
+    dir = @movableDir[x1][y1]
+    @rawBoard[x1][y1] = @current_color
+    print("#{x1}, #{y1}\n")
+
+    # 上
+    x = x1
+    y = y1
+    if (dir & UPPER) != NONE
+      # 置かれた場所の上の石がcurrent_color(置かれた石の色)と違う間の繰り返し
+      while @rawBoard[x][y-1] != @current_color
+        y = y - 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 下
+    x = x1
+    y = y1
+    # 石が下にあり, ひっくり返せるなら
+    if (dir & LOWER) != NONE
+      # 置いた石と同じ色の石が見つかるまで繰り返す
+      while @rawBoard[x][y+1] != @current_color
+        puts "yes\n"
+        y = y + 1
+        print("down: #{x}, #{y}\n")
+        @rawBoard[x][y] = @current_color
+      end
+      print("end-while #{x}, #{y}\n")
+    end
+
+    # 左
+    x = x1
+    y = y1
+    if (dir & LEFT) != NONE
+      while @rawBoard[x-1][y] != @current_color
+        x = x - 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 右
+    x = x1
+    y = y1
+    if (dir & RIGHT) != NONE
+      while @rawBoard[x+1][y] != @current_color
+        x = x + 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 左上: x-1, y-1
+    x = x1
+    y = y1
+    if (dir & UPPER_LEFT) != NONE
+      while @rawBoard[x-1][y-1] != @current_color
+        x = x - 1
+        y = y - 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 右上: x+1, y-1
+    x = x1
+    y = y1
+    if (dir & UPPER_RIGHT) != NONE
+      while @rawBoard[x+1][y-1] != @current_color
+        x = x + 1
+        y = y - 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 左下: x-1, y+1
+    x = x1
+    y = y1
+    if (dir & LOWER_LEFT) != NONE
+      while @rawBoard[x-1][y+1] != @current_color
+        x = x - 1
+        y = y + 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+
+    # 右下: x+1, y+1
+    x = x1
+    y = y1
+    if (dir & LOWER_RIGHT) != NONE
+      while @rawBoard[x+1][y+1] != @current_color
+        x = x + 1
+        y = y + 1
+        @rawBoard[x][y] = @current_color
+      end
+    end
+  end
+
   # upside-down the stone
   def move(x, y)
+    @rawBoard.each do |r|
+      print("#{r}\n")
+    end
+    # ひっくり返せる石がない場合
     if @movableDir[x][y] == NONE
       return false
     end
-
+    # 石をひっくり返すメソッドを呼び出す
     # self.flipDisks(x, y)
-    @rawBoard[x][y] = @current_color
 
+    # 石を置く
+    @rawBoard[x][y] = @current_color
+    print("move:#{x}, #{y}\n")
+    
+  
+    
+    
+    # 順番交代
+    # ターンカウント
     @turns += 1
+    
+    # 色反転
     @current_color = -1 * @current_color
     self.initMovable
+    
 
     return true
   end
+  
 
+
+  
   # GUI
   def loop()
     while true do
@@ -245,10 +364,13 @@ class Board
 
         if input.length == 2
           x = input[0].ord - "a".ord + 1
+          puts x
           y = input[1].ord - "1".ord + 1
+          puts y
 
           # もし入力された座標が石を打てる場所であれば, isvalid を true にする
-          p @movableDir
+          #p @movableDir
+          # p @rawBoard
           if x.between?(1,BOARDSIZE) and y.between?(1, BOARDSIZE) and @movableDir[x][y] != NONE
             isvalid = true
           end
@@ -263,6 +385,24 @@ class Board
       # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
       # ひっくり返すのは次回
       move(x, y)
+
+      def isGameOver
+        # 60手に達していたら終了
+        if @turns == MAXTURNS
+          return true
+        end
+
+        # 現在の手番で打てる場所があればfalse
+        # if 打てる場所がある 
+
+        # 相手に打てる手があればfalse
+        # if 相手に打てる場所がある
+
+
+        # 以上に当てはまらなければtrue
+        return true
+      end
+      
     end
   end
 end
