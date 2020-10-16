@@ -65,10 +65,9 @@ class Board
       for y in 1..BOARDSIZE do
         dir = self.checkMobility(x, y, @current_color)
         @movableDir[x][y] = dir
-        @movableDir.each do |i|
-          # print("#{i}\n")
-        end
-        # print("\n")
+       
+        
+
       end
     end
   end
@@ -108,7 +107,7 @@ class Board
       while (@rawBoard[x][y] == -color)
         y = y + 1
       end
-      if @rawBoard[x][y] = color
+      if @rawBoard[x][y] == color
         dir |= LOWER
       end
     end
@@ -197,7 +196,6 @@ class Board
   def flipDisks(x1, y1)
     dir = @movableDir[x1][y1]
     @rawBoard[x1][y1] = @current_color
-    print("#{x1}, #{y1}\n")
 
     # 上
     x = x1
@@ -290,6 +288,56 @@ class Board
     end
   end
 
+  # isGameOver
+  def isGameOver
+    # 60手に達していたら終了
+    if @turns == MAXTURNS
+      return true
+    end
+
+    count_none = 0
+    # 相手に打てる手があればfalse
+    for x in 1..BOARDSIZE do
+      for y in 1..BOARDSIZE do
+
+        # 現在の手番で打てる場所があればfalse
+        if @movableDir[x][y] == NONE
+          count_none += 1
+        end
+        if count_none > 0
+          return false
+        end
+
+        if checkMobility(x, y, -@current_color) == true
+          return false
+        end
+      end
+    end
+  end
+
+  def isPass
+    count_none = 0
+    # 相手に打てる手があればfalse
+    for x in 1..BOARDSIZE do
+      for y in 1..BOARDSIZE do
+
+        # 現在の手番で打てる場所があればfalse
+        if @movableDir[x][y] == NONE
+          count_none += 1
+        end
+        if count_none > 0
+          return false
+        end
+
+        if checkMobility(x, y, -@current_color) == true
+          return true
+        end
+      end
+    end
+
+    return false
+  end
+
   # upside-down the stone
   def move(x, y)
     @rawBoard.each do |r|
@@ -300,13 +348,13 @@ class Board
       return false
     end
     # 石をひっくり返すメソッドを呼び出す
-    # self.flipDisks(x, y)
+    self.flipDisks(x, y)
 
     # 石を置く
     @rawBoard[x][y] = @current_color
-    print("move:#{x}, #{y}\n")
+
     
-  
+    
     
     
     # 順番交代
@@ -346,6 +394,27 @@ class Board
         print("\n")
       end
       print("\n")
+=begin
+      if self.isGameOver
+        print("ゲーム終了, お疲れ~")
+        exit
+      end
+
+      if self.isPass
+        if @current_color == BLACK
+          print("Black")
+        elsif
+          print("White")
+        end
+        print("is going to pass.\n")
+        # 手番を反転
+        @current_color = -@current_color
+        # @MovableDirを更新
+        self.initMobile
+
+      end
+=end
+
 
       print("next is")
       if @current_color == BLACK
@@ -364,13 +433,15 @@ class Board
 
         if input.length == 2
           x = input[0].ord - "a".ord + 1
-          puts x
+       
           y = input[1].ord - "1".ord + 1
-          puts y
-
+      
           # もし入力された座標が石を打てる場所であれば, isvalid を true にする
           #p @movableDir
-          # p @rawBoard
+          @rawBoard.each do |e|
+            print("#{e}\n")
+          end
+          print("\n")
           if x.between?(1,BOARDSIZE) and y.between?(1, BOARDSIZE) and @movableDir[x][y] != NONE
             isvalid = true
           end
@@ -385,23 +456,7 @@ class Board
       # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
       # ひっくり返すのは次回
       move(x, y)
-
-      def isGameOver
-        # 60手に達していたら終了
-        if @turns == MAXTURNS
-          return true
-        end
-
-        # 現在の手番で打てる場所があればfalse
-        # if 打てる場所がある 
-
-        # 相手に打てる手があればfalse
-        # if 相手に打てる場所がある
-
-
-        # 以上に当てはまらなければtrue
-        return true
-      end
+      # p @movableDir
       
     end
   end
