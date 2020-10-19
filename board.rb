@@ -1,4 +1,14 @@
 # coding: utf-8
+ require "tk"
+
+# マスの幅
+SWIDTH = 70
+
+# 盤の周囲のマージン
+MARGIN = 20
+
+# メッセージ表示領域の高さ
+MHEIGHT = 80
 
 # 盤に配置する石, 壁, 空白
 BLACK = 1
