@@ -64,12 +64,14 @@ class Board
     for x in 1..BOARDSIZE do
       for y in 1..BOARDSIZE do
         dir = self.checkMobility(x, y, @current_color)
+        
         @movableDir[x][y] = dir
        
         
 
       end
     end
+    puts dir
   end
 
   # check the direction that you can put a stone
@@ -127,6 +129,8 @@ class Board
     end
 
     # RIGHT
+    x = x1
+    y = y1
     if @rawBoard[x+1][y] == -color
       x = x + 1
       while (@rawBoard[x][y] == -color)
@@ -138,6 +142,8 @@ class Board
     end
 
     # UPPER_LEFT
+    x = x1
+    y = y1
     if @rawBoard[x-1][y-1] == -color
       x = x - 1
       y = y - 1
@@ -151,6 +157,8 @@ class Board
     end
 
     # UPPER_RIGHT
+    x = x1
+    y = y1
     if @rawBoard[x+1][y-1] == -color
       x = x + 1
       y = y - 1
@@ -164,6 +172,8 @@ class Board
     end
 
     # LOWER_LEFT
+    x = x1
+    y = y1
     if @rawBoard[x-1][y+1] == -color
       x = x - 1
       y = y + 1
@@ -177,6 +187,8 @@ class Board
     end
 
     # LOWER_RIGHT
+    x = x1
+    y = y1
     if @rawBoard[x+1][y+1] == -color
       x = x + 1
       y = y + 1
@@ -302,13 +314,10 @@ class Board
 
         # 現在の手番で打てる場所があればfalse
         if @movableDir[x][y] == NONE
-          count_none += 1
-        end
-        if count_none > 0
           return false
         end
 
-        if checkMobility(x, y, -@current_color) == true
+        if checkMobility(x, y, -@current_color)
           return false
         end
       end
@@ -316,24 +325,27 @@ class Board
   end
 
   def isPass
-    count_none = 0
     # 相手に打てる手があればfalse
     for x in 1..BOARDSIZE do
       for y in 1..BOARDSIZE do
 
         # 現在の手番で打てる場所があればfalse
-        if @movableDir[x][y] == NONE
-          count_none += 1
-        end
-        if count_none > 0
+        if @movableDir[x][y] != NONE
           return false
         end
+      end 
+    end
+    
 
-        if checkMobility(x, y, -@current_color) == true
+    for x in 1..BOARDSIZE do
+      for y in 1..BOARDSIZE do
+        # 動かせる方向が一つでもあれば
+        if checkMobility(x, y, -@current_color) != NONE
           return true
         end
       end
     end
+    
 
     return false
   end
@@ -354,9 +366,6 @@ class Board
     @rawBoard[x][y] = @current_color
 
     
-    
-    
-    
     # 順番交代
     # ターンカウント
     @turns += 1
@@ -374,6 +383,7 @@ class Board
   
   # GUI
   def loop()
+    
     while true do
       print(" abcdefgh\n")
 
@@ -394,13 +404,16 @@ class Board
         print("\n")
       end
       print("\n")
-=begin
+
       if self.isGameOver
         print("ゲーム終了, お疲れ~")
         exit
       end
 
       if self.isPass
+        @movableDir.each do |i|
+          print("#{i}\n")
+        end
         if @current_color == BLACK
           print("Black")
         elsif
@@ -410,10 +423,11 @@ class Board
         # 手番を反転
         @current_color = -@current_color
         # @MovableDirを更新
-        self.initMobile
-
+        self.initMovable
+      else
+        print("OK\n")
+  
       end
-=end
 
 
       print("next is")
@@ -451,12 +465,14 @@ class Board
           print("そこには打てまへんで.知らんけど. \n")
         end
       end
+
   
 
       # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
       # ひっくり返すのは次回
       move(x, y)
       # p @movableDir
+      
       
     end
   end
