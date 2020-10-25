@@ -74,11 +74,8 @@ class Board
     for x in 1..BOARDSIZE do
       for y in 1..BOARDSIZE do
         dir = self.checkMobility(x, y, @current_color)
-        
-        @movableDir[x][y] = dir
-       
-        
 
+        @movableDir[x][y] = dir
       end
     end
     puts dir
@@ -343,9 +340,9 @@ class Board
         if @movableDir[x][y] != NONE
           return false
         end
-      end 
+      end
     end
-    
+
 
     for x in 1..BOARDSIZE do
       for y in 1..BOARDSIZE do
@@ -355,7 +352,7 @@ class Board
         end
       end
     end
-    
+
 
     return false
   end
@@ -375,25 +372,24 @@ class Board
     # 石を置く
     @rawBoard[x][y] = @current_color
 
-    
+
     # 順番交代
     # ターンカウント
     @turns += 1
-    
+
     # 色反転
     @current_color = -1 * @current_color
     self.initMovable
-    
+
 
     return true
   end
-  
 
 
-  
+
   # GUI
   def loop()
-    
+
     while true do
       print(" abcdefgh\n")
 
@@ -436,7 +432,7 @@ class Board
         self.initMovable
       else
         print("OK\n")
-  
+
       end
 
 
@@ -457,9 +453,9 @@ class Board
 
         if input.length == 2
           x = input[0].ord - "a".ord + 1
-       
+
           y = input[1].ord - "1".ord + 1
-      
+
           # もし入力された座標が石を打てる場所であれば, isvalid を true にする
           #p @movableDir
           @rawBoard.each do |e|
@@ -476,20 +472,130 @@ class Board
         end
       end
 
-  
-
       # 石を打ち,(ひっくり返して)手番を入れ替える.ただし今回は石を置くだけで,
       # ひっくり返すのは次回
       move(x, y)
       # p @movableDir
-      
-      
+
+
     end
   end
+
+  # GUI 第三回
+  def makeWindow
+    # 盤の幅と高さ
+    w = SWIDTH * 8 + MARGIN * 2
+    h = SWIDTH * 8 + MARGIN * 2
+
+    # ルートウィンドウ
+    top = TkRoot.new(title: "Othello", width: w, height: h + MHEIGHT)
+
+    # 盤を描くためのキャンパス
+    canvas = TkCanvas.new(top, width: w, height: h, borderwidth: 0,
+    highlightthickness: 0, background: "darkgreen").place("x" => 0, "y" => 0)
+
+    # 盤の周囲の文字
+    for i in 0..BOARDSIZE-1 do
+      TkcText.new(canvas, i*SWIDTH + SWIDTH/2 + MARGIN - 4, MARGIN - 10,
+      text: ("a".ord + i).chr, fill: "white")
+      TkcText.new(canvas, 10, i*SWIDTH + SWIDTH/2 + MARGIN, text: (i+1).to_s, fill: "white")
+    end
+
+    # 8x8のマスを描く
+    self.drawBoard(canvas)
+
+    # 動作確認用メッセージの表示領域. TkTextでテキストを表示
+    frame = TkFrame.new(top, width: w, background: "red",
+    height: MHEIGHT).place("x" => 0, "y" => h)
+
+    yscr = TkScrollbar.new(frame).pack("fill"=>"y", "side"=>"right", "expand"=>true)
+    text = TkText.new(frame, height: 6).pack("fill" => "both",
+    "side"=>"right", "expand" => true)
+    text.yscrollbar(yscr)
+
+    # 盤がクリックされた場合の動作を定義, clickされるとclickBoardが呼び出される
+    canvas.bind("ButtonPress-1", proc{|x, y|
+      self.clickBoard(canvas, text, x, y)
+    }, "%x %y")
+
+    return canvas
+  end
+
+  # 盤の区画を定義
+  def drawBoard(canvas)
+    for x in 0..7 do
+       for y in 0..7 do
+        # マスを一つ描く
+        rect = TkcRectangle.new(canvas, MARGIN + x*SWIDTH ,MARGIN  + y*SWIDTH, MARGIN + (x+1)*SWIDTH, MARGIN + (y+1)*SWIDTH)
+        # rect = TkcRectangle.new(canvas, MARGIN, MARGIN, MARGIN + SWIDTH, MARGIN　
+        rect.configure(fill: "#00aa00")
+      end
+    end
+  end
+  # draw disks
+   def drawAllDisks(canvas)
+     for x in 1..BOARDSIZE do
+       for y in 1..BOARDSIZE do
+         x1 = MARGIN + (x-1)*SWIDTH
+         y1 = MARGIN + (y-1)*SWIDTH
+         x2 = MARGIN + x*SWIDTH
+         y2 = MARGIN + y*SWIDTH
+         if @rawBoard[x][y] != NONE
+           disk = TkcOval.new(canvas, x1, y1, x2, y2)
+           # if it is black
+           if @rawBoard[x][y] == 1
+             c = "black"
+           elsif @rawBoard[x][y] == -1
+             c = "white"
+           else
+           end
+           disk.configure(fill: c)
+         end
+       end
+     end
+   end
+
+   def clickBoard(canvas, text, x, y)
+     # x1=?
+     # y1=?
+     for i in 0..7 do
+       if x >= MARGIN+i*SWIDTH && x <= MARGIN+(i+1)*SWIDTH
+         x1 = i+1
+       end
+     end
+     for j in 0..7 do
+       if y >= MARGIN+j*SWIDTH && y <= MARGIN+(i+1)*SWIDTH
+         y1 = j+1
+       end
+     end
+
+     # zahyo
+     msg = "(x, y)=(" + x.to_s + "," + y.to_s + ")
+     (x1, y1) = (" + x1.to_s + "," + y1.to_s + ")\n"
+     text.insert("1.0", msg)
+
+     if !((1..BOARDSIZE).include? x1) or !((1..BOARDSIZE).include? y1)
+       return
+     end
+
+     if !self.move(x1, y1)
+       return
+     end
+     self.drawAllDisks(canvas)
+     Tk.update
+
+     if self.isGameOver
+       text.insert("1.0", "Game Over\n")
+     end
+
+     if self.isPass
+       @current_color = -@current_color
+       self.initMobile
+       text.insert("1.0", "Pass\n")
+       return
+     end
+   end
 end
-
-
-
 
 
 
@@ -498,5 +604,6 @@ board = Board.new
 
 # 盤を初期化
 board.init
-
-board.loop
+canvas = board.makeWindow
+board.drawAllDisks(canvas)
+Tk.mainloop
