@@ -717,9 +717,65 @@ class Board
 
    # 探索アルゴリズム(暫定版)
    def minmax(limit, mode)
-     # 探索をせず評価値を返すだけ
-     return self.evaluate(mode)
+     score = 0
+     maxScore = -MAXSCORE
+     # 探索の深さ限度に達したかゲーム終了の場合は評価値を返す
+     if limit == 0 or self.isGameOver
+       return self.evaluate(mode)
+     end
+
+     # パスの場合は手番を変えて探索を続ける
+     if self.isPass
+       # 状態を保存
+       tmpBoard = @rawBoard.map(&:dup)
+       tmpDir = @movableDir.map(&:dup)
+       tmpTurns = @turns
+       tmpColor = @current_color
+
+       # 色を反転して探索
+       @current_color = -@current_color
+       self.initMovable
+       score = -minmax(limit-1, mode)
+
+       # 元に戻す
+       @rawBoard = tmpBoard.map(&:dup)
+       @movableDir = tmpDir.map(&:dup)
+
+       @turns = tmpTurns
+       @current_color = tmpColor
+
+       return score
+     end
+     # パスでない場合はすべての打てる手を生成しスコアの最も高いものを探す
+     for x in 1..BOARDSIZE do
+       for y in 1..BOARDSIZE do
+         if @movableDir[x][y] != NONE
+           # 現在の盤の状態を保存
+           tmpBoard = @rawBoard.map(&:dup)
+           tmpDir = @movableDir.map(&:dup)
+           tmpTurns = @turns
+           tmpColor = @current_color
+           # 石を打つ
+           self.move(x, y)
+           # minmaxを呼び出す
+           score = -minmax(limit - 1, mode)
+
+           # 盤の状態を元に戻す
+           @rawBoard = tmpBoard.map(&:dup)
+           @movableDir = tmpDir.map(&:dup)
+           @turns = tmpTurns
+           @current_color = tmpColor
+
+           if maxScore < score
+             maxScore = score
+           end
+
+         end
+       end
+     end
+     return maxScore
    end
+
 
 
 
