@@ -31,6 +31,13 @@ UPPER_RIGHT=128
 BOARDSIZE=8
 MAXTURNS=60
 
+# minmaxで探索する深さ
+LIMIT = 2
+# 残り手数がLIMIT2以下になったら最後まで読み取る
+LIMIT2 = 6
+# スコアの最大値
+MAXSCORE = 10000
+
 # 盤を表すクラスの定義
 class Board
   # 盤を表す配列
@@ -386,7 +393,7 @@ class Board
   end
 
 
-
+=begin
   # GUI
   def loop()
 
@@ -476,11 +483,9 @@ class Board
       # ひっくり返すのは次回
       move(x, y)
       # p @movableDir
-
-
     end
   end
-
+=end
   # GUI 第三回
   def makeWindow
     # 盤の幅と高さ
@@ -585,15 +590,157 @@ class Board
      Tk.update
 
      if self.isGameOver
-       text.insert("1.0", "Game Over\n")
+       # 勝敗を調べる
+       b = 0
+       w = 0
+       for x in 1..BOARDSIZE do
+         for y in 1..BOARDSIZE do
+           if @rawBoard[x][y] != NONE
+             if @rawBoard[x][y] == 1
+               b += 1
+             elsif @rawBoard[x][y] == -1
+               w += 1
+             end
+           end
+         end
+       end
+       if b > w
+         winner = "black"
+         diff = b - w
+       elsif w > b
+         winner = "white"
+         diff = w - b
+       else
+         winner = "draw"
+       end
+       text.insert("1.0", "Game Over. winner is #{winner}. diff is #{diff}\n")
      end
 
      if self.isPass
        @current_color = -@current_color
-       self.initMobile
+       self.initMovable
        text.insert("1.0", "Pass\n")
        return
      end
+     # ゲーム終了か、人間が打てるようになるまでコンピュータの手を生成
+     loop do
+       maxScore = -MAXSCORE
+       xmax = 0
+       ymax = 0
+       # すべての打てる手を生成しそれぞれの手をminmaxで探索
+       for x in 1..BOARDSIZE do
+         for y in 1..BOARDSIZE do
+           puts x
+           puts y
+           if @movableDir[x][y] != NONE
+             # 状態を保存
+             tmpBoard = @rawBoard.map(&:dup)
+             tmpDir = @movableDir.map(&:dup)
+             tmpTurns = @turns
+             tmpColor = @current_color
+
+             self.move(x, y)
+             # 残りの手数がLIMIT2以下の場合は終盤とする
+             if MAXTURNS - @turns <= LIMIT2
+               mode = 1
+               limit = LIMIT2
+             # そうでなければ終盤でない
+             else
+               mode = 0
+               limit = LIMIT
+             end
+             score = -minmax(limit - 1, mode)
+             text.insert('1.0', "(x, y) = (" + x.to_s + "," + y.to_s + "),
+             score = " + score.to_s + "\n")
+
+             # 元に戻す
+             @rawBoard = tmpBoard.map(&:dup)
+             @movableDir = tmpDir.map(&:dup)
+             @turns = tmpTurns
+             @current_color = tmpColor
+
+             if maxScore < score
+               maxScore = score
+               xmax = x
+               ymax = y
+             end
+           end
+         end
+       end
+       # もっともスコアが高いところに石を置く
+       self.move(xmax, ymax)
+       self.drawAllDisks(canvas)
+       text.insert('1.0', "選択されたのは(x, y) = (" + xmax.to_s + "," + ymax.to_s + "),
+       score = " + maxScore.to_s + "\n")
+       Tk.update
+
+       # ゲーム終了ならループを抜ける
+       if self.isGameOver
+         # 勝敗を調べる
+         b = 0
+         w = 0
+         for x in 1..BOARDSIZE do
+           for y in 1..BOARDSIZE do
+             if @rawBoard[x][y] != NONE
+               if @rawBoard[x][y] == 1
+                 b += 1
+               elsif @rawBoard[x][y] == -1
+                 w += 1
+               end
+             end
+           end
+         end
+         if b > w
+           winner = "black"
+           diff = b - w
+         elsif w > b
+           winner = "white"
+           diff = w - b
+         else
+           winner = "draw"
+         end
+         text.insert("1.0", "Game Over. winner is #{winner}. diff is #{diff}\n")
+         # text.insert('1.0', " ゲーム終了\n")
+         break
+       # 人間がパスの場合手番を入れ替える
+       elsif self.isPass
+         @current_color = -@current_color
+         self.initMovable
+         text.insert('1.0', "パス\n")
+       else
+         break
+       end
+     end
+   end
+
+
+
+   # 探索アルゴリズム(暫定版)
+   def minmax(limit, mode)
+     # 探索をせず評価値を返すだけ
+     return self.evaluate(mode)
+   end
+
+
+
+   def numDisks
+     score = 0
+     for x in 1..BOARDSIZE do
+       for y in 1..BOARDSIZE do
+         if @rawBoard[x][y] == @current_color
+           score += 1
+         end
+         if @rawBoard[x][y] == -@current_color
+           score -= 1
+         end
+       end
+     end
+     return score
+   end
+
+   def evaluate(mode)
+     score = self.numDisks
+     return score
    end
 end
 
